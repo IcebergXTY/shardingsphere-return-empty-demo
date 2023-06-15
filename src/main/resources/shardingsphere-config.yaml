@@ -1,0 +1,82 @@
+dataSources:
+  ds_0:
+    minIdle: '10'
+    validationQuery: SELECT 1 FROM DUAL
+    initialSize: '10'
+    maxWait: '10000'
+    breakAfterAcquireFailure: 'false'
+    poolPreparedStatements: 'true'
+    url: jdbc:mysql://ubuntu-vmware:3306/online0?serverTimezone=GMT%2B8&setUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&rewriteBatchedStatements=true
+    maxPoolPreparedStatementPerConnectionSize: '20'
+    username: root
+    password: 123456
+    testWhileIdle: 'true'
+    testOnBorrow: 'false'
+    minEvictableIdleTimeMillis: '300000'
+    timeBetweenEvictionRunsMillis: '10000'
+    testOnReturn: 'false'
+    statViewServletEnabled: 'true'
+    driverClassName: com.mysql.jdbc.Driver
+    dataSourceClassName: com.alibaba.druid.pool.DruidDataSource
+    maxActive: '50'
+  ds_1:
+    minIdle: '10'
+    validationQuery: SELECT 1 FROM DUAL
+    initialSize: '10'
+    maxWait: '10000'
+    breakAfterAcquireFailure: 'false'
+    poolPreparedStatements: 'true'
+    url: jdbc:mysql://ubuntu-vmware:3306/online1?serverTimezone=GMT%2B8&setUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&rewriteBatchedStatements=true
+    maxPoolPreparedStatementPerConnectionSize: '20'
+    username: root
+    password: 123456
+    testWhileIdle: 'true'
+    testOnBorrow: 'false'
+    minEvictableIdleTimeMillis: '300000'
+    timeBetweenEvictionRunsMillis: '10000'
+    testOnReturn: 'false'
+    statViewServletEnabled: 'true'
+    driverClassName: com.mysql.jdbc.Driver
+    dataSourceClassName: com.alibaba.druid.pool.DruidDataSource
+    maxActive: '50'
+databaseName: online-primary
+mode:
+  repository:
+    type: memory
+  type: Standalone
+props:
+  sql-show: false
+rules:
+  - !SHARDING
+    auditors:
+      sharding_key_required_auditor:
+        type: DML_SHARDING_CONDITIONS
+    keyGenerators:
+      snowflake:
+        type: SNOWFLAKE
+    shardingAlgorithms:
+      tenant_code_standard_algorithm:
+        props:
+          algorithmClassName: com.example.sharding.TenantCodeStandardAlgorithm
+          strategy: standard
+        type: CLASS_BASED
+      shop_code_table_sharding_algorithm:
+        props:
+          algorithmClassName: com.example.sharding.ShopCodeTableShardingAlgorithm
+          strategy: complex
+        type: CLASS_BASED
+    tables:
+      cost_item_order_detail:
+        actualDataNodes: ds_$->{0..1}.cost_item_order_detail_$->{0..999}
+        databaseStrategy:
+          standard:
+            shardingAlgorithmName: tenant_code_standard_algorithm
+            shardingColumn: tenant_code
+        keyGenerateStrategy:
+          column: id
+          keyGeneratorName: snowflake
+        logicTable: cost_item_order_detail
+        tableStrategy:
+          complex:
+            shardingAlgorithmName: shop_code_table_sharding_algorithm
+            shardingColumns: tenant_code,platform_code,shop_code
